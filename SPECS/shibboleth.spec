@@ -1,3 +1,5 @@
+%define _with_fastcgi 1
+
 Name:		shibboleth
 Version:	2.6.1
 Release:	3.1
@@ -83,6 +85,8 @@ exchange of rich attributes subject to privacy controls.
 
 This package contains the Shibboleth Service Provider runtime libraries,
 daemon, default plugins, and Apache module(s).
+
+This package is built with FastCGI support.
 
 %package devel
 Summary:	Shibboleth Development Headers
@@ -470,6 +474,9 @@ exit 0
 %doc %{pkgdocdir}/api
 
 %changelog
+* Wed Jun 27 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-3.1
+- Enable fastcgi support
+
 * Tue May 03 2016 Scott Cantor <cantor.2@osu.edu> - 2.6.0-1
 - Bump opensaml dependency version
 - Bump max wait time for shibd systemd unit file

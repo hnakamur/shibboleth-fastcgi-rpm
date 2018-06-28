@@ -1,8 +1,8 @@
-%global _with_fastcgi 1
+%global _with_fastcgi '--with-fastcgi'
 
 Name:		shibboleth
 Version:	2.6.1
-Release:	3.1
+Release:	4
 Summary:	Open source system for attribute-based Web SSO
 Group:		Productivity/Networking/Security
 Vendor:		Shibboleth Consortium
@@ -474,6 +474,9 @@ exit 0
 %doc %{pkgdocdir}/api
 
 %changelog
+* Thu Jun 28 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-4
+- Fix enabling fastcgi support
+
 * Wed Jun 27 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-3.1
 - Enable fastcgi support
 

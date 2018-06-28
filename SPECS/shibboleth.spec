@@ -1,4 +1,4 @@
-%define _with_fastcgi 1
+%global _with_fastcgi 1
 
 Name:		shibboleth
 Version:	2.6.1
@@ -12,7 +12,7 @@ Source:		%{name}-sp-%{version}.tar.bz2
 BuildRoot:	%{_tmppath}/%{name}-sp-%{version}-root
 Obsoletes:	shibboleth-sp = 2.5.0
 Requires:	openssl
-%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 BuildRequires:	xmltooling-schemas%{?_isa} >= 1.6.0, opensaml-schemas%{?_isa} >= 2.6.0
 %else
 BuildRequires:	xmltooling-schemas >= 1.6.0, opensaml-schemas >= 2.6.0
@@ -21,7 +21,7 @@ BuildRequires:	xmltooling-schemas >= 1.6.0, opensaml-schemas >= 2.6.0
 PreReq:		%{insserv_prereq} %{fillup_prereq}
 BuildRequires:	libxerces-c-devel >= 3.1
 %else
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 BuildRequires:	systemd-devel, pkgconfig
 BuildRequires:	xerces-c-devel >= 3.1
 %else
@@ -33,7 +33,7 @@ BuildRequires:	libxmltooling-devel >= 1.6.0
 BuildRequires:	libsaml-devel >= 2.6.0
 %{?_with_log4cpp:BuildRequires: liblog4cpp-devel >= 1.0}
 %{!?_with_log4cpp:BuildRequires: liblog4shib-devel >= 1.0.4}
-%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 Requires:	libcurl-openssl%{?_isa} >= 7.21.7
 BuildRequires:	chrpath
 %endif
@@ -45,12 +45,12 @@ BuildRequires:  gcc-c++, zlib-devel, boost-devel >= 1.32.0
 %{!?_without_doxygen:BuildRequires: doxygen}
 %{!?_without_odbc:BuildRequires:unixODBC-devel}
 %{?_with_fastcgi:BuildRequires: fcgi-devel}
-%if 0%{?centos_version} >= 600
+%if 0%{?centos} >= 6
 BuildRequires:	libmemcached-devel
 %endif
 %{?_with_memcached:BuildRequires: libmemcached-devel}
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
-%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 %{!?_without_builtinapache:BuildRequires: httpd-devel%{?_isa}}
 %else
 %{!?_without_builtinapache:BuildRequires: httpd-devel}
@@ -93,7 +93,7 @@ Summary:	Shibboleth Development Headers
 Group:		Development/Libraries/C and C++
 Requires:	%{name} = %{version}-%{release}
 Obsoletes:	shibboleth-sp-devel = 2.5.0
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 Requires:	xerces-c-devel >= 3.1
 %else
 Requires:	libxerces-c-devel >= 3.1
@@ -118,10 +118,10 @@ This package includes files needed for development with Shibboleth.
 %if 0%{?suse_version} >= 1210
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_systemd:--enable-systemd} %{?shib_options}
 %else
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{!?_without_systemd:--enable-systemd} %{?shib_options}
 %else
-%if 0%{?centos_version} >= 600
+%if 0%{?centos} >= 6
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{?shib_options}
 %else
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{?_with_memcached} %{?shib_options}
@@ -171,7 +171,7 @@ fi
 
 # Establish location of systemd file, if any.
 SYSTEMD_SHIBD="no"
-%if 0%{?suse_version} >= 1210 || 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?suse_version} >= 1210 || 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	%{__mkdir} -p $RPM_BUILD_ROOT%{_unitdir}
 	echo "%attr(0444,-,-) %{_unitdir}/shibd.service" >> rpm.filelist
 	SYSTEMD_SHIBD="$RPM_BUILD_ROOT%{_unitdir}/shibd.service"
@@ -211,7 +211,7 @@ Before=httpd.service
 Type=notify
 NotifyAccess=main
 User=%{runuser}
-%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 Environment=LD_LIBRARY_PATH=/opt/shibboleth/%{_lib}
 %endif
 ExecStart=%{_sbindir}/shibd -f -F
@@ -240,7 +240,7 @@ SHIBD_USER=%{runuser}
 # Wait period (secs) for configuration (and metadata) to load
 SHIBD_WAIT=30
 EOF
-	%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+	%if 0%{?rhel} >= 6 || 0%{?centos} >= 6|| 0%{?amzn} >= 1
 		cat >> $SYSCONFIG_SHIBD <<EOF
 
 # Override OS-supplied libcurl
@@ -249,7 +249,7 @@ EOF
 	%endif
 fi
 
-%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 	# Strip existing rpath to libcurl.
 	chrpath -d $RPM_BUILD_ROOT%{_sbindir}/shibd
 	chrpath -d $RPM_BUILD_ROOT%{_bindir}/mdquery
@@ -319,7 +319,7 @@ fi
 		fi
 	fi
 
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	# Initial prep for systemd
 	%systemd_post shibd.service
 	if [ $1 -gt 1 ] ; then
@@ -346,7 +346,7 @@ fi
 %preun
 # On final removal, stop shibd and remove service, restart Apache if running.
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	%systemd_preun shibd.service
 %else
 	if [ $1 -eq 0 ] ; then
@@ -376,7 +376,7 @@ exit 0
 %endif
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 	# On upgrade, restart components if they're already running.
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	%systemd_postun_with_restart shibd.service
 %else
 	if [ $1 -ge 1 ] ; then
@@ -443,7 +443,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/shibboleth/*.html
 %config(noreplace) %{_sysconfdir}/shibboleth/*.logger
 %if "%{_vendor}" == "redhat"
-%if 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 %else
 %config %{_initrddir}/shibd
 %endif
@@ -455,7 +455,7 @@ exit 0
 %config %{_initrddir}/shibd
 %{_sbindir}/rcshibd
 %endif
-%if 0%{?suse_version} >= 1210 || 0%{?rhel} >= 7 || 0%{?centos_version} >= 700
+%if 0%{?suse_version} >= 1210 || 0%{?rhel} >= 7 || 0%{?centos} >= 7
 %{_tmpfilesdir}/%{name}.conf
 %endif
 %{_sysconfdir}/shibboleth/*.dist

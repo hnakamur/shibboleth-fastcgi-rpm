@@ -2,7 +2,7 @@
 
 Name:		shibboleth
 Version:	2.6.1
-Release:	4
+Release:	5
 Summary:	Open source system for attribute-based Web SSO
 Group:		Productivity/Networking/Security
 Vendor:		Shibboleth Consortium
@@ -176,6 +176,11 @@ SYSTEMD_SHIBD="no"
 	echo "%attr(0444,-,-) %{_unitdir}/shibd.service" >> rpm.filelist
 	SYSTEMD_SHIBD="$RPM_BUILD_ROOT%{_unitdir}/shibd.service"
 
+	echo "%attr(0444,-,-) %{_unitdir}/shibauthorizer.socket" >> rpm.filelist
+	echo "%attr(0444,-,-) %{_unitdir}/shibauthorizer.service" >> rpm.filelist
+	echo "%attr(0444,-,-) %{_unitdir}/shibresponder.socket" >> rpm.filelist
+	echo "%attr(0444,-,-) %{_unitdir}/shibresponder.service" >> rpm.filelist
+
 	# Get run directory created at boot time.
 	%{__mkdir} -p $RPM_BUILD_ROOT%{_tmpfilesdir}
 	echo "%attr(0444,-,-) %{_tmpfilesdir}/%{name}.conf" >> rpm.filelist
@@ -211,9 +216,6 @@ Before=httpd.service
 Type=notify
 NotifyAccess=main
 User=%{runuser}
-%if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
-Environment=LD_LIBRARY_PATH=/opt/shibboleth/%{_lib}
-%endif
 ExecStart=%{_sbindir}/shibd -f -F
 StandardInput=null
 StandardOutput=null
@@ -222,6 +224,71 @@ TimeoutStopSec=5s
 TimeoutStartSec=150s
 Restart=on-failure
 RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+	cat > "$RPM_BUILD_ROOT%{_unitdir}/shibauthorizer.socket" <<EOF
+[Unit]
+Description=shibauthorizer socket
+
+[Socket]
+SocketUser=shibd
+SocketGroup=shibd
+SocketMode=0660
+ListenStream=/run/shibboleth/shibauthorizer.sock
+Accept=false
+
+[Install]
+WantedBy=sockets.target
+EOF
+	cat > "$RPM_BUILD_ROOT%{_unitdir}/shibauthorizer.service" <<EOF
+[Unit]
+Description=shibauthorizer
+After=network.target
+Requires=shibauthorizer.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/lib64/shibboleth/shibauthorizer
+User=shibd
+Group=shibd
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+	cat > "$RPM_BUILD_ROOT%{_unitdir}/shibresponder.socket" <<EOF
+[Unit]
+Description=shibresponder socket
+
+[Socket]
+SocketUser=shibd
+SocketGroup=shibd
+SocketMode=0660
+ListenStream=/run/shibboleth/shibresponder.sock
+Accept=false
+
+[Install]
+WantedBy=sockets.target
+EOF
+	cat > "$RPM_BUILD_ROOT%{_unitdir}/shibresponder.service" <<EOF
+[Unit]
+Description=shibresponder
+After=network.target
+Requires=shibresponder.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/lib64/shibboleth/shibresponder
+User=shibd
+Group=shibd
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -321,7 +388,8 @@ fi
 
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	# Initial prep for systemd
-	%systemd_post shibd.service
+	%systemd_post shibd.service \
+		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 	if [ $1 -gt 1 ] ; then
 		systemctl daemon-reload
 	fi
@@ -347,7 +415,8 @@ fi
 # On final removal, stop shibd and remove service, restart Apache if running.
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-	%systemd_preun shibd.service
+	%systemd_preun shibd.service \
+		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 %else
 	if [ $1 -eq 0 ] ; then
 		/sbin/service shibd stop >/dev/null 2>&1
@@ -377,7 +446,8 @@ exit 0
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 	# On upgrade, restart components if they're already running.
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-	%systemd_postun_with_restart shibd.service
+	%systemd_postun_with_restart shibd.service \
+		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 %else
 	if [ $1 -ge 1 ] ; then
 		/sbin/service shibd status 1>/dev/null && /sbin/service shibd restart 1>/dev/null
@@ -474,6 +544,10 @@ exit 0
 %doc %{pkgdocdir}/api
 
 %changelog
+* Mon Jul 02 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-5
+- Add systemd socket and service file for shibauthorizer and shibresponder for RH/CentOS 7
+- Don't set LD_LIBRARY_PATH in shibd systemd unitfile for RH/CentOS 7
+
 * Thu Jun 28 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-4
 - Fix enabling fastcgi support
 

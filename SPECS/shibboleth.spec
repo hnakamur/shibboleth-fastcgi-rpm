@@ -2,7 +2,7 @@
 
 Name:		shibboleth
 Version:	2.6.1
-Release:	5
+Release:	6
 Summary:	Open source system for attribute-based Web SSO
 Group:		Productivity/Networking/Security
 Vendor:		Shibboleth Consortium
@@ -388,8 +388,7 @@ fi
 
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	# Initial prep for systemd
-	%systemd_post shibd.service \
-		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
+	%systemd_post shibd.service shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 	if [ $1 -gt 1 ] ; then
 		systemctl daemon-reload
 	fi
@@ -415,8 +414,7 @@ fi
 # On final removal, stop shibd and remove service, restart Apache if running.
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-	%systemd_preun shibd.service \
-		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
+	%systemd_preun shibd.service shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 %else
 	if [ $1 -eq 0 ] ; then
 		/sbin/service shibd stop >/dev/null 2>&1
@@ -446,8 +444,7 @@ exit 0
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 	# On upgrade, restart components if they're already running.
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-	%systemd_postun_with_restart shibd.service \
-		shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
+	%systemd_postun_with_restart shibd.service shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 %else
 	if [ $1 -ge 1 ] ; then
 		/sbin/service shibd status 1>/dev/null && /sbin/service shibd restart 1>/dev/null
@@ -544,6 +541,9 @@ exit 0
 %doc %{pkgdocdir}/api
 
 %changelog
+* Wed Jul 04 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-6
+- Fix "shibauthorizer.socket: command not found" error in system_postd et al.
+
 * Mon Jul 02 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-5
 - Add systemd socket and service file for shibauthorizer and shibresponder for RH/CentOS 7
 - Don't set LD_LIBRARY_PATH in shibd systemd unitfile for RH/CentOS 7

@@ -10,6 +10,7 @@ Vendor:		Shibboleth Consortium
 License:	Apache-2.0
 URL:		http://shibboleth.net/
 Source:		%{name}-sp-%{version}.tar.bz2
+Patch1:		shibboleth-sp-3.0.1-shibresponder.cpp.patch
 BuildRoot:	%{_tmppath}/%{name}-sp-%{version}-root
 Obsoletes:	shibboleth-sp = 2.5.0
 Requires:	openssl
@@ -111,6 +112,7 @@ This package includes files needed for development with Shibboleth.
 
 %prep
 %setup -n %{name}-sp-%{version}
+%patch1 -p1
 
 %build
 %if 0%{?suse_version} >= 1300

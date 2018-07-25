@@ -1,8 +1,9 @@
 %global _with_fastcgi '--with-fastcgi'
 
 Name:		shibboleth
-Version:	2.6.1
-Release:	6
+Version:	3.0.1
+# NOTE: In order to install our rpm, here we use a greater release than upstream Shibboleth rpm.
+Release:	3.1.1
 Summary:	Open source system for attribute-based Web SSO
 Group:		Productivity/Networking/Security
 Vendor:		Shibboleth Consortium
@@ -13,26 +14,22 @@ BuildRoot:	%{_tmppath}/%{name}-sp-%{version}-root
 Obsoletes:	shibboleth-sp = 2.5.0
 Requires:	openssl
 %if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
-BuildRequires:	xmltooling-schemas%{?_isa} >= 1.6.0, opensaml-schemas%{?_isa} >= 2.6.0
+BuildRequires:	xmltooling-schemas%{?_isa} >= 1.6.0, opensaml-schemas%{?_isa} >= 3.0.0
 %else
-BuildRequires:	xmltooling-schemas >= 1.6.0, opensaml-schemas >= 2.6.0
+BuildRequires:	xmltooling-schemas >= 3.0.0, opensaml-schemas >= 3.0.0
 %endif
 %if 0%{?suse_version} > 1030 && 0%{?suse_version} < 1130
 PreReq:		%{insserv_prereq} %{fillup_prereq}
-BuildRequires:	libxerces-c-devel >= 3.1
-%else
+%endif
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-BuildRequires:	systemd-devel, pkgconfig
-BuildRequires:	xerces-c-devel >= 3.1
-%else
-BuildRequires:	libxerces-c-devel >= 3.1
+BuildRequires:  systemd-devel
 %endif
-%endif
-BuildRequires:	libxml-security-c-devel >= 1.7.3
-BuildRequires:	libxmltooling-devel >= 1.6.0
-BuildRequires:	libsaml-devel >= 2.6.0
+BuildRequires:	libxerces-c-devel >= 3.2
+BuildRequires:	libxml-security-c-devel >= 2.0.0
+BuildRequires:	libxmltooling-devel >= 3.0.0
+BuildRequires:	libsaml-devel >= 3.0.0
 %{?_with_log4cpp:BuildRequires: liblog4cpp-devel >= 1.0}
-%{!?_with_log4cpp:BuildRequires: liblog4shib-devel >= 1.0.4}
+%{!?_with_log4cpp:BuildRequires: liblog4shib-devel >= 2}
 %if 0%{?rhel} >= 6 || 0%{?centos} >= 6 || 0%{?amzn} >= 1
 Requires:	libcurl-openssl%{?_isa} >= 7.21.7
 BuildRequires:	chrpath
@@ -40,7 +37,7 @@ BuildRequires:	chrpath
 %if 0%{?suse_version} > 1300
 BuildRequires:	libtool
 %endif
-BuildRequires:  gcc-c++, zlib-devel, boost-devel >= 1.32.0
+BuildRequires:  gcc-c++, pkgconfig, boost-devel >= 1.32.0
 %{!?_without_gssapi:BuildRequires: krb5-devel}
 %{!?_without_doxygen:BuildRequires: doxygen}
 %{!?_without_odbc:BuildRequires:unixODBC-devel}
@@ -65,7 +62,7 @@ Requires(pre): pwdutils
 %{!?_without_builtinapache:BuildRequires: apache2-devel}
 %{?systemd_requires}
 %if 0%{?suse_version} >= 1210
-BuildRequires: systemd-rpm-macros, systemd-devel, pkgconfig
+BuildRequires: systemd-rpm-macros, systemd-devel
 %endif
 %endif
 
@@ -98,11 +95,12 @@ Requires:	xerces-c-devel >= 3.1
 %else
 Requires:	libxerces-c-devel >= 3.1
 %endif
-Requires: 	libxml-security-c-devel >= 1.7.3
-Requires: 	libxmltooling-devel >= 1.6.0
-Requires: 	libsaml-devel >= 2.6.0
+Requires:	libxerces-c-devel >= 3.2
+Requires: 	libxml-security-c-devel >= 2.0.0
+Requires: 	libxmltooling-devel >= 3.0.0
+Requires: 	libsaml-devel >= 3.0.0
 %{?_with_log4cpp:Requires: liblog4cpp-devel >= 1.0}
-%{!?_with_log4cpp:Requires: liblog4shib-devel >= 1.0.4}
+%{!?_with_log4cpp:Requires: liblog4shib-devel >= 2}
 
 %description devel
 Shibboleth is a Web Single Sign-On implementations based on OpenSAML
@@ -115,16 +113,20 @@ This package includes files needed for development with Shibboleth.
 %setup -n %{name}-sp-%{version}
 
 %build
+%if 0%{?suse_version} >= 1300
+    %configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_systemd:--enable-systemd} %{?shib_options} PKG_CONFIG_PATH=./pkgconfig-workarounds/opensuse13
+%else
 %if 0%{?suse_version} >= 1210
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_systemd:--enable-systemd} %{?shib_options}
 %else
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
-	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{!?_without_systemd:--enable-systemd} %{?shib_options}
+	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{!?_without_systemd:--enable-systemd} %{?shib_options} PKG_CONFIG_PATH=/opt/shibboleth/%{_lib}/pkgconfig
 %else
 %if 0%{?centos} >= 6
-	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{?shib_options}
+	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{!?_without_memcached:--with-memcached} %{?shib_options} PKG_CONFIG_PATH=/opt/shibboleth/%{_lib}/pkgconfig:./pkgconfig-workarounds/rh6
 %else
 	%configure %{?_without_odbc:--disable-odbc} %{?_without_adfs:--disable-adfs} %{?_with_fastcgi} %{!?_without_gssapi:--with-gssapi} %{?_with_memcached} %{?shib_options}
+%endif
 %endif
 %endif
 %endif
@@ -209,6 +211,7 @@ if [ "$SYSTEMD_SHIBD" != "no" ] ; then
 	cat > $SYSTEMD_SHIBD <<EOF
 [Unit]
 Description=Shibboleth Service Provider Daemon
+Documentation=https://wiki.shibboleth.net/confluence/display/SP3/Home
 After=network.target
 Before=httpd.service
 
@@ -216,12 +219,15 @@ Before=httpd.service
 Type=notify
 NotifyAccess=main
 User=%{runuser}
+%if 0%{?rhel} >= 6 || 0%{?centos_version} >= 600 || 0%{?amzn} >= 1
+Environment=LD_LIBRARY_PATH=/opt/shibboleth/%{_lib}
+%endif
 ExecStart=%{_sbindir}/shibd -f -F
 StandardInput=null
 StandardOutput=null
 StandardError=journal
-TimeoutStopSec=5s
-TimeoutStartSec=150s
+TimeoutStopSec=1m
+TimeoutStartSec=5m
 Restart=on-failure
 RestartSec=30s
 
@@ -355,16 +361,20 @@ exit 0
 /sbin/ldconfig
 %endif
 
-# Key generation or ownership fix
-cd %{_sysconfdir}/shibboleth
-if [ -f sp-key.pem ] ; then
-	%{__chown} %{runuser}:%{runuser} sp-key.pem sp-cert.pem 2>/dev/null || :
-else
-	/bin/sh ./keygen.sh -b -u %{runuser} -g %{runuser}
+# Key ownership fix.
+if [ -f %{_sysconfdir}/shibboleth/sp-key.pem ] ; then
+	%{__chown} %{runuser}:%{runuser} %{_sysconfdir}/shibboleth/sp-key.pem %{_sysconfdir}/shibboleth/sp-cert.pem 2>/dev/null || :
 fi
 
 # Fix ownership of log files (even on new installs, if they're left from an older one).
 %{__chown} %{runuser}:%{runuser} %{_localstatedir}/log/shibboleth/* 2>/dev/null || :
+
+# Generate two keys on new installs.
+if [ $1 -eq 1 ] ; then
+	cd %{_sysconfdir}/shibboleth
+	/bin/sh ./keygen.sh -b -n sp-signing -u %{runuser} -g %{runuser}
+	/bin/sh ./keygen.sh -b -n sp-encrypt -u %{runuser} -g %{runuser}
+fi
 
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
 	if [ $1 -gt 1 ] ; then
@@ -442,7 +452,7 @@ exit 0
 /sbin/ldconfig
 %endif
 %if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
-	# On upgrade, restart components if they're already running.
+# On upgrade, restart components if they're already running.
 %if 0%{?rhel} >= 7 || 0%{?centos} >= 7
 	%systemd_postun_with_restart shibd.service shibauthorizer.socket shibauthorizer.service shibresponder.socket shibresponder.service
 %else
@@ -484,19 +494,12 @@ exit 0
 %{_bindir}/resolvertest
 %{_libdir}/libshibsp.so.*
 %{_libdir}/libshibsp-lite.so.*
+%exclude %{_libdir}/*.la
 %dir %{_libdir}/shibboleth
 %{_libdir}/shibboleth/*
+%{_libdir}/shibboleth/*.so
+%exclude %{_libdir}/shibboleth/*.la
 %attr(0750,%{runuser},%{runuser}) %dir %{_localstatedir}/log/shibboleth
-%if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon" || "%{_vendor}" == "suse"
-%if "%{_vendor}" == "redhat" || "%{_vendor}" == "amazon"
-%attr(0750,apache,apache) %dir %{_localstatedir}/log/shibboleth-www
-%endif
-%if "%{_vendor}" == "suse"
-%attr(0750,wwwrun,www) %dir %{_localstatedir}/log/shibboleth-www
-%endif
-%else
-%attr(0750,-,-) %dir %{_localstatedir}/log/shibboleth-www
-%endif
 %if 0%{?suse_version} < 1300
 %attr(0755,%{runuser},%{runuser}) %dir %{_localstatedir}/run/shibboleth
 %endif
@@ -506,7 +509,12 @@ exit 0
 %dir %{_datadir}/shibboleth
 %{_datadir}/shibboleth/*
 %dir %{_sysconfdir}/shibboleth
-%config(noreplace) %{_sysconfdir}/shibboleth/*.xml
+%config(missingok, noreplace) %{_sysconfdir}/shibboleth/shibboleth2.xml
+%config(noreplace) %{_sysconfdir}/shibboleth/attribute-map.xml
+%config(noreplace) %{_sysconfdir}/shibboleth/attribute-policy.xml
+%config(noreplace) %{_sysconfdir}/shibboleth/example-metadata.xml
+%config(noreplace) %{_sysconfdir}/shibboleth/protocols.xml
+%config(noreplace) %{_sysconfdir}/shibboleth/security-policy.xml
 %config(noreplace) %{_sysconfdir}/shibboleth/*.html
 %config(noreplace) %{_sysconfdir}/shibboleth/*.logger
 %if "%{_vendor}" == "redhat"
@@ -525,11 +533,13 @@ exit 0
 %if 0%{?suse_version} >= 1210 || 0%{?rhel} >= 7 || 0%{?centos} >= 7
 %{_tmpfilesdir}/%{name}.conf
 %endif
+%{_sysconfdir}/shibboleth/example-shibboleth2.xml
 %{_sysconfdir}/shibboleth/*.dist
 %{_sysconfdir}/shibboleth/apache*.config
 %{_sysconfdir}/shibboleth/shibd-*
 %attr(0755,root,root) %{_sysconfdir}/shibboleth/keygen.sh
 %attr(0755,root,root) %{_sysconfdir}/shibboleth/metagen.sh
+%attr(0755,root,root) %{_sysconfdir}/shibboleth/seckeygen.sh
 %doc %{pkgdocdir}
 %exclude %{pkgdocdir}/api
 
@@ -538,9 +548,16 @@ exit 0
 %{_includedir}/*
 %{_libdir}/libshibsp.so
 %{_libdir}/libshibsp-lite.so
+%{_libdir}/pkgconfig/*.pc
 %doc %{pkgdocdir}/api
 
 %changelog
+* Wed Jul 25 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 3.0.1-3.1.1
+- Update to upstream Shibboleth rpm release 3.0.1-3.1.
+- Bump dependency versions
+- Require updated libraries across the board
+- Generate two keys on new installs
+ 
 * Wed Jul 04 2018 Hiroaki Nakamura <hnakamur@gmail.com> - 2.6.0-6
 - Fix "shibauthorizer.socket: command not found" error in system_postd et al.
 
